@@ -1,7 +1,8 @@
 package main
 
 import (
-	//"errors"
+	"errors"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -49,10 +50,32 @@ func createBook(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newBook) // return the newly created book with StatusCreated status code
 }
 
+func getBookById(id string) (*book, error) {
+	for i, b := range books {
+		if b.ID == id {
+			return &books[i], nil
+		}
+	}
+	return nil, errors.New("book not found")
+}
+
+func bookById(c *gin.Context) {
+	id := c.Param("id") // "/books/2" -> 2 is the id here
+	book, err := getBookById(id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book not found."}) // gin.H is a shortcut to allow us to write our own custom json. it maps to a type string to interface
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, book)
+}
+
 func main() {
 	// gin router setup
 	router := gin.Default()
 	router.GET("/books", getBooks) // if you make a GET request to /books then we call our function. POST requests for example will not trigger this
 	router.POST("/books", createBook)
+	router.GET("/books/:id", bookById) // path parameter :param
 	router.Run("localhost:8080")
 }
