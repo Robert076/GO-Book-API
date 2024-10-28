@@ -33,9 +33,26 @@ func getBooks(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, books)
 }
 
+func createBook(c *gin.Context) {
+	// the context retains all details belonging to a request
+	// so if you had query parameters, data payload and stuff it will keep them there
+	var newBook book
+
+	if err := c.BindJSON(&newBook); err != nil {
+		// here we tried to bind the json from the request data
+		// to the new book by passing its pointer. if we got an error
+		// we simply return
+		return
+	}
+
+	books = append(books, newBook)              // if we didnt get an error and we succesfully bounded the json we append the new book
+	c.IndentedJSON(http.StatusCreated, newBook) // return the newly created book with StatusCreated status code
+}
+
 func main() {
 	// gin router setup
 	router := gin.Default()
 	router.GET("/books", getBooks) // if you make a GET request to /books then we call our function. POST requests for example will not trigger this
+	router.POST("/books", createBook)
 	router.Run("localhost:8080")
 }
